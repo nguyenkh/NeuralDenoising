@@ -9,7 +9,7 @@ np.random.seed(35363)
 
 def main():
     """
-    Builds dictionaries and overcomplete word embeddings
+    Builds the dictionaries and the overcomplete word embeddings
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-input', type=str)
