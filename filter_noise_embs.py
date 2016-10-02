@@ -6,7 +6,6 @@ from common import read_file, save_file, largest_eigenvalue
 import argparse
 from collections import OrderedDict
 from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
-import cPickle
 
 rng = np.random.RandomState(12034)
 srng = RandomStreams()
@@ -15,29 +14,29 @@ def main():
     """
     Noise filtering from word embeddings
     Usage:
-        python filter_noise_embs.py -input <original_embs_file> -output <denoising_embs_file> -dict <dict_file>
+        python filter_noise_embs.py -input <original_embs_file> -output <denoising_embs_file>
                                     -over <over_complete_embs_file> -iter <iteration> -bsize <batch_size>
     <original_embs_file>: the original word embeddings is used to learn denoising
     <denoising_embs_file>: the output name file of word denoising embeddings
-    <dict_file>: the dictionary file
     <over_complete_embs_file>: the overcomple word embeddings is used to learn overcomplete word denoising embeddings
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-input', type=str)
     parser.add_argument('-output', type=str)
     parser.add_argument('-over', action='store', default=False, dest='file_over')
-    parser.add_argument('-dict', type=str)
     parser.add_argument('-iter', type=int)
     parser.add_argument('-bsize', type=int)
     
     args = parser.parse_args()
     
-    vocab, vecs_in = read_file(args.input)
-    vecs_dict = cPickle.load(open(args.dict, 'rb'))
-    Q, S = initialize_parameters(vecs_dict)
+    vocab, vecs_in = read_file(args.input)   
     if args.file_over is False:
+        vecs_dict = np.load(args.input + '.dict_comp')
+        Q, S = initialize_parameters(vecs_dict)
         model = DeEmbs(vecs_in=vecs_in, batch_size=args.bsize, epochs=args.iter, Q=Q, S=S)
     else:
+        vecs_dict = np.load(args.input + '.dict_overcomp')
+        Q, S = initialize_parameters(vecs_dict)
         vc, vecs_over = read_file(args.file_over)
         assert vocab == vc
         model = DeEmbs(vecs_in=vecs_in, vecs_over=vecs_over,

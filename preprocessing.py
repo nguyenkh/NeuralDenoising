@@ -2,7 +2,6 @@ import argparse
 import spams
 import time
 from common import read_file, save_file
-import cPickle
 import numpy as np
 
 np.random.seed(35363)
@@ -21,8 +20,8 @@ def main():
     dict_overcomp = learn_dict(vecs.T, factor=args.factor)
     dim_over = args.factor * len(vecs[0])
     vecs_overcomp = overcomplete_embs(vecs.T, dim_over)
-    cPickle.dump(dict_comp, open(args.input + '.dict_comp', 'wb'))
-    cPickle.dump(dict_overcomp, open(args.input + '.dict_overcomp', 'wb'))
+    np.save(args.input + '.dict_comp', dict_comp)
+    np.save(args.input + '.dict_overcomp', dict_overcomp)
     save_file(args.output, vocab, vecs_overcomp.T, binary=True)
 
 def overcomplete_embs(vecs, dim_over, lambda1=1.e-6):
