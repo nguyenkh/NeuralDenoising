@@ -9,6 +9,11 @@ np.random.seed(35363)
 def main():
     """
     Builds the dictionaries and the overcomplete word embeddings
+    Usage:
+        python preprocessing.py -input <original_embs_file> -factor <factor_overcomplete>
+        
+    <original_embs_file>: the original word embeddings is used to learn denoising
+    <factor_overcomplete>: a factor of overcomplete embeddings length (=factor * length of original word embeddings)
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-input', type=str)
@@ -23,6 +28,7 @@ def main():
     np.save(args.input + '.dict_comp', dict_comp)
     np.save(args.input + '.dict_overcomp', dict_overcomp)
     save_file(args.output, vocab, vecs_overcomp.T, binary=True)
+    print 'Preprocessing done!'
 
 def overcomplete_embs(vecs, dim_over, lambda1=1.e-6):
     print 'X shape: ' + str(vecs.shape)
