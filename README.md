@@ -19,10 +19,17 @@ Code for paper [Neural-based Noise Filtering from Word Embeddings](http://www.im
     
     For example, transform an input word embeddings of 100 dimensions into overcomplete word embeddings of 1000 dimensions (factor == 10):
   
-    ```python preprocessing.py -input sgns_100.bin -output sgns_overcomp_1000d.bin -factor 10```
+    ```python preprocessing.py -input sgns_100d.bin -output sgns_overcomp_1000d.bin -factor 10```
     
 ### Training models
   1. Training CompEmb model:
   
+    ```python filter_noise_embs.py -input sgns_100d.bin -output sgns_denoising_100d.bin -iter 30 -bsize 100```
+    
+    Train CompEmb model with 30 iterations and batch size of 100.
+  
   2. Training OverCompEmb model:
+  
+    ```python filter_noise_embs.py -input sgns_100d.bin -output sgns_denoising_100d.bin -over sgns_overcomp_1000d.bin -iter 30 -bsize 100```
 
+  Train OverCompEmb model with 30 iterations and batch size of 100; sgns_overcomp_1000d.bin is an overcomplete word embeddings.
