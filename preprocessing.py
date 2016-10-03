@@ -60,7 +60,7 @@ def learn_dict(vecs, factor):
     X = vecs
     n_components = len(X)
     X = np.asfortranarray(X / np.tile(np.sqrt((X * X).sum(axis=0)),(X.shape[0],1)),dtype = myfloat)
-    param = { 'K' : factor*n_components, # learns a dictionary with 100 elements
+    param = { 'K' : factor*n_components, # learns a dictionary with K elements
           'lambda1' : 0.15, 'numThreads' : -1, 'batchsize' : 50,
           'iter' : 1000}
     
