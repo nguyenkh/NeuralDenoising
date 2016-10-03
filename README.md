@@ -14,9 +14,11 @@ Code for paper [Neural-based Noise Filtering from Word Embeddings](http://www.im
 ### Preprocessing
   - This step is to learn the dictionaries for CompEmb and OverCompEmb models; transform complete word embeddings to overcomplete word embeddings.
   - Running command:
+  
     ```python preprocessing.py -input <original_embs_file> -factor <factor_overcomplete>```
     
-  - For example, transform an input word embeddings of 100 dimensions into overcomplete word embeddings of 1000 dimensions (factor == 10):
+    For example, transform an input word embeddings of 100 dimensions into overcomplete word embeddings of 1000 dimensions (factor == 10):
+  
     ```python preprocessing.py -input sgns_100.bin -factor 10```
     
 
