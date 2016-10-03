@@ -10,13 +10,15 @@ def main():
     """
     Builds the dictionaries and the overcomplete word embeddings
     Usage:
-        python preprocessing.py -input <original_embs_file> -factor <factor_overcomplete>
+        python preprocessing.py -input <original_embs_file> -output <overcomp_file> -factor <factor_overcomplete>
         
     <original_embs_file>: the original word embeddings is used to learn denoising
+    <overcomp_file>: the file name of overcomplete word embeddings
     <factor_overcomplete>: a factor of overcomplete embeddings length (=factor * length of original word embeddings)
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-input', type=str)
+    parser.add_argument('-output', type=str)
     parser.add_argument('-factor', type=int, default=10)
     args = parser.parse_args()
     
