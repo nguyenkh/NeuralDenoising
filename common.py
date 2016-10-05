@@ -12,10 +12,10 @@ def smart_open(fname, mode='rb'):
     else:
         return open(fname, mode)
 
-def read_file(binary_file, binary=True):
+def read_file(binary_file, binary=1):
     vecs = []
     vocab = []
-    if binary==True:
+    if binary==1:
         with smart_open(binary_file, 'rb') as f:
             header = to_unicode(f.readline())
             vocab_size, vector_size = map(int, header.split())
@@ -51,13 +51,13 @@ def read_file(binary_file, binary=True):
     
     return vocab, vecs
 
-def save_file(outfile, vocab, vecs, binary=True):
+def save_file(outfile, vocab, vecs, binary=1):
     assert len(vocab) == len(vecs)
     with smart_open(outfile, 'wb') as f:
         f.write(to_utf8("%s %s\n" % vecs.shape))
         for i in range(len(vecs)):
             word = vocab[i]
-            if binary:
+            if binary==1:
                 arr = vecs[i]
                 f.write(to_utf8(word) + b' ' + arr.tostring())
             else:
@@ -83,6 +83,6 @@ def largest_eigenvalue(mat):
     N = len(D)
     k = 1
     eigvalues = largest_eigh(D, eigvals=(N-k,N-1), eigvals_only = True)
-    print 'Shape D: ' + str(D.shape)
+    print 'Q shape: ' + str(D.shape)
     return eigvalues[0]
     

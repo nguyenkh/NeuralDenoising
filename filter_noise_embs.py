@@ -14,11 +14,12 @@ def main():
     """
     Noise filtering from word embeddings
     Usage:
-        python filter_noise_embs.py -input <original_embs_file> -output <denoising_embs_file>
+        python filter_noise_embs.py -input <original_embs_file> -output <denoising_embs_file> -bin <binary_file>
                                     -over <over_complete_embs_file> -iter <iteration> -bsize <batch_size>
     <original_embs_file>: the original word embeddings is used to learn denoising
     <denoising_embs_file>: the output name file of word denoising embeddings
     <over_complete_embs_file>: the overcomple word embeddings is used to learn overcomplete word denoising embeddings
+    <binary_file>: 1 for binary; 0 for text
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-input', type=str)
@@ -26,24 +27,24 @@ def main():
     parser.add_argument('-over', action='store', default=False, dest='file_over')
     parser.add_argument('-iter', type=int)
     parser.add_argument('-bsize', type=int)
+    parser.add_argument('-bin', type=int, default=1)
     
     args = parser.parse_args()
     
-    vocab, vecs_in = read_file(args.input)   
+    vocab, vecs_in = read_file(args.input, binary=args.bin)   
     if args.file_over is False:
-        vecs_dict = np.load(args.input + '.dict_comp')
+        vecs_dict = np.load(args.input + '.dict_comp.npy')
         Q, S = initialize_parameters(vecs_dict)
         model = DeEmbs(vecs_in=vecs_in, batch_size=args.bsize, epochs=args.iter, Q=Q, S=S)
     else:
-        vecs_dict = np.load(args.input + '.dict_overcomp')
+        vecs_dict = np.load(args.input + '.dict_overcomp.npy')
         Q, S = initialize_parameters(vecs_dict)
-        vc, vecs_over = read_file(args.file_over)
+        vc, vecs_over = read_file(args.file_over, binary=args.bin)
         assert vocab == vc
         model = DeEmbs(vecs_in=vecs_in, vecs_over=vecs_over,
                        batch_size=args.bsize, epochs=args.iter, Q=Q, S=S)    
     vecs_out = model.fit()
-    save_file(args.output, vocab, vecs_out, binary=True)
-    print 'Done........'
+    save_file(args.output, vocab, vecs_out, binary=args.bin)
 
 class HiddenLayer():
     def __init__(self, x, dim_in, dim_out, Q=None, S=None):
@@ -94,7 +95,7 @@ class HiddenLayer():
         return X
         
 class DeEmbs():
-    def __init__(self, vecs_in, vecs_over=None, batch_size, epochs, Q=None, S=None):
+    def __init__(self, vecs_in, vecs_over=None, batch_size=100, epochs=30, Q=None, S=None):
         self.X_data = vecs_in
         if vecs_over is None:
             self.Z_data = vecs_in
