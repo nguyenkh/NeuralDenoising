@@ -1,6 +1,7 @@
 import numpy as np
 from numpy import fromstring, dtype
 from scipy.linalg import eigh as largest_eigh
+import struct
 
 def smart_open(fname, mode='rb'):
     if fname.endswith('.gz'):
@@ -53,15 +54,33 @@ def read_file(binary_file, binary=1):
 
 def save_file(outfile, vocab, vecs, binary=1):
     assert len(vocab) == len(vecs)
-    with smart_open(outfile, 'wb') as f:
-        f.write(to_utf8("%s %s\n" % vecs.shape))
-        for i in range(len(vecs)):
-            word = vocab[i]
-            if binary==1:
-                arr = vecs[i]
-                f.write(to_utf8(word) + b' ' + arr.tostring())
-            else:
-                f.write(to_utf8("%s %s\n" % (word, ' '.join("%f" % val for val in vecs[i,:]))))
+    print 'Saving embeddings...'
+    dim = len(vecs[0])
+    if binary == 1:
+        fvec = open(outfile, 'wb')
+        fvec.write('%d %d\n' % (len(vecs), dim))
+        fvec.write('\n')
+        for word, vector in zip(vocab, vecs):
+            fvec.write('%s ' % word)
+            for s in vector:
+                fvec.write(struct.pack('f', s))
+            fvec.write('\n')
+    elif binary == 0:
+        fvec = open(outfile, 'w')
+        fvec.write('%d %d\n' % (len(vecs), dim))
+        for word, vector in zip(vocab, vecs):
+            vector_str = ' '.join([str(s) for s in vector])
+            fvec.write('%s %s\n' % (word, vector_str))
+    
+#     with smart_open(outfile, 'wb') as f:
+#         f.write(to_utf8("%s %s\n" % vecs.shape))
+#         for i in range(len(vecs)):
+#             word = vocab[i]
+#             if binary==1:
+#                 arr = vecs[i]
+#                 f.write(to_utf8(word) + b' ' + arr.tostring())
+#             else:
+#                 f.write(to_utf8("%s %s\n" % (word, ' '.join("%f" % val for val in vecs[i,:]))))
 
 def to_utf8(text, errors='strict', encoding='utf8'):
     """Convert a string (unicode or bytestring in `encoding`), to bytestring in utf8."""
