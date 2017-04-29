@@ -1,6 +1,5 @@
 import argparse
-import spams
-import time
+from sklearn.decomposition import MiniBatchDictionaryLearning
 from common import read_file, save_file
 import numpy as np
 
@@ -26,52 +25,37 @@ def main():
     args = parser.parse_args()
     
     vocab, vecs = read_file(args.input, binary=args.bin)
-    dict_comp = learn_dict(vecs.T, factor=1)
-    dict_overcomp = learn_dict(vecs.T, factor=args.factor)
-    dim_over = args.factor * len(vecs[0])
-    vecs_overcomp = overcomplete_embs(vecs.T, dim_over)
+    dict_comp = pre_complete_embs(vecs)
+    dict_overcomp, vecs_overcomp = pre_overcomplete_embs(vecs, factor=args.factor)
     np.save(args.input + '.dict_comp', dict_comp)
     np.save(args.input + '.dict_overcomp', dict_overcomp)
-    save_file(args.output, vocab, vecs_overcomp.T, binary=args.bin)
+    save_file(args.output, vocab, vecs_overcomp, binary=args.bin)
     print 'Preprocessing done!'
-
-def overcomplete_embs(vecs, dim_over, lambda1=1.e-6):
-    print 'X shape: ' + str(vecs.shape)
-    n_features = len(vecs)
-    n_components = dim_over
-    X = np.asfortranarray(vecs, dtype='float32')
-    D = np.asfortranarray(np.random.normal(size = (n_features,n_components)))
-    D = np.asfortranarray(D / np.tile(np.sqrt((D*D).sum(axis=0)),(D.shape[0],1)),dtype='float32')
-    ind_groups = np.array(xrange(0,X.shape[1],10),dtype=np.int32) #indices of the first signals in each group
-    # parameters of the optimization procedure are chosen
-    itermax = 1000
-    tol = 1e-3
-    mode = spams.PENALTY
-    lambda1 = lambda1 # squared norm of the residual should be less than 0.1
-    numThreads = -1 # number of processors/cores to use the default choice is -1
-                # and uses all the cores of the machine
-    alpha0 = np.zeros((D.shape[1],X.shape[1]),dtype= 'float32',order="FORTRAN")
-    tic = time.time()
-    alpha = spams.l1L2BCD(X,D,alpha0,ind_groups,lambda1 = lambda1,mode = mode,
-                          itermax = itermax,tol = tol,numThreads = numThreads)
-    tac = time.time()
-    t = tac - tic
-    print 'Z shape: ' + str(alpha.shape)
-    print "%f signals processed per second" %(X.shape[1] / t)
-    return alpha
-
-def learn_dict(vecs, factor):
+    
+def pre_complete_embs(vecs, alpha=1.e-2):
     print 'X shape: ' + str(vecs.shape)
     X = vecs
-    n_components = len(X)
-    X = np.asfortranarray(X / np.tile(np.sqrt((X * X).sum(axis=0)),(X.shape[0],1)),dtype = 'float32')
-    param = { 'K' : factor*n_components, # learns a dictionary with K elements
-          'lambda1' : 0.15, 'numThreads' : -1, 'batchsize' : 50,
-          'iter' : 1000}
+    n_components = len(X)[1]
+    print 'n_components: %d' %n_components
+    dl = MiniBatchDictionaryLearning(n_components=n_components,alpha=1.e-2,batch_size=10,n_jobs=40)
+    dl.fit(X)
+    D = dl.components_
+    print 'Complete dictionary shape: ' + str(D.shape)
+    return D.T
+
+def pre_overcomplete_embs(vecs, factor=10, alpha=1.e-2):
+    print 'X shape: ' + str(vecs.shape)
+    X = vecs
+    n_components = factor * len(X)[1]
+    print 'n_components: %d' %n_components
+    dl = MiniBatchDictionaryLearning(n_components=n_components,alpha=1.e-2,batch_size=10,n_jobs=40)
+    dl.fit(X)
+    D = dl.components_
+    overvecs = dl.transform(X)
+    print 'Overcomplete dictionary shape: ' + str(D.shape)
+    print 'Overcomplete vecs shape: ' + str(overvecs.shape)
     
-    D = spams.trainDL(X,**param)
-    print 'Q shape: ' + str(D.shape)
-    return D
+    return D.T, overvecs
 
 if __name__=='__main__':    
     main()
